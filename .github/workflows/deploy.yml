@@ -2,31 +2,32 @@ name: 🚀 Deploy Portal Docente ISI 2025
 
 on:
   push:
-    branches: [ "main", "deploy" ]
+    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
-  build-and-deploy:
+  deploy:
+    name: 🧩 Despliegue del portal
     runs-on: self-hosted
-    name: 🔁 Build & Deploy Portal
     steps:
-      - name: 📥 Checkout repo
+      - name: 🧾 Clonar código del repositorio
         uses: actions/checkout@v4
 
-      - name: 🧹 Sync to /srv/pln/proyecto_ISI
+      - name: ⚙️ Sincronizar cambios con el contenedor local
         run: |
-          mkdir -p /srv/pln/proyecto_ISI
-          rsync -a --delete $GITHUB_WORKSPACE/ /srv/pln/proyecto_ISI/
-
-      - name: 🐳 Rebuild & Restart
-        run: |
+          echo "📂 Sincronizando repositorio en /srv/pln/proyecto_ISI..."
           cd /srv/pln/proyecto_ISI
-          docker compose down -v || true
-          docker network create pln_net || true
-          docker compose build --no-cache
-          docker compose up -d
-          docker image prune -f
+          sudo git fetch origin main
+          sudo git reset --hard origin/main
 
-      - name: ✅ Smoke check
+      - name: 🐳 Reconstruir y levantar contenedor
         run: |
-          sleep 2
-          docker ps | grep proyecto_isi_frontend
+          echo "🚀 Construyendo e iniciando contenedores del portal..."
+          cd /srv/pln/proyecto_ISI
+          sudo docker compose down || true
+          sudo docker compose up -d --build
+
+      - name: ✅ Validar estado de los servicios
+        run: |
+          echo "🔍 Estado actual de contenedores:"
+          sudo docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
