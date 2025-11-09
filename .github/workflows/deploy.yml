@@ -1,33 +1,30 @@
-name: 🚀 Deploy Portal Docente ISI 2025
+name: 🚀 Deploy Portal ISI
 
 on:
   push:
-    branches: [ main ]
-  workflow_dispatch:
+    branches: [ "main" ]
 
 jobs:
   deploy:
-    name: 🧩 Despliegue del portal
     runs-on: self-hosted
+
     steps:
-      - name: 🧾 Clonar código del repositorio
+      - name: 📦 Checkout del repositorio
         uses: actions/checkout@v4
 
-      - name: ⚙️ Sincronizar cambios con el contenedor local
+      - name: 🚀 Desplegando aplicación
         run: |
-          echo "📂 Sincronizando repositorio en /srv/pln/proyecto_ISI..."
-          cd /srv/pln/proyecto_ISI
-          sudo git fetch origin main
-          sudo git reset --hard origin/main
+          echo "📂 Sincronizando código con /srv/pln/proyecto_ISI..."
+          DEPLOY_PATH="/srv/pln/proyecto_ISI"
 
-      - name: 🐳 Reconstruir y levantar contenedor
-        run: |
-          echo "🚀 Construyendo e iniciando contenedores del portal..."
-          cd /srv/pln/proyecto_ISI
+          # Copiar contenido actualizado del repo al contenedor de despliegue
+          sudo rsync -av --delete \
+            --exclude 'runner_portal' \
+            --exclude '.git' \
+            --exclude '.github' \
+            ./ $DEPLOY_PATH/
+
+          cd $DEPLOY_PATH
+          echo "🔁 Reconstruyendo contenedores..."
           sudo docker compose down || true
           sudo docker compose up -d --build
-
-      - name: ✅ Validar estado de los servicios
-        run: |
-          echo "🔍 Estado actual de contenedores:"
-          sudo docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
