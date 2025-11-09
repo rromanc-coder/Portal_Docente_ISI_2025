@@ -3,7 +3,9 @@ FROM node:20-alpine AS build
 WORKDIR /app
 
 # Copiamos los archivos de configuración de npm primero
-COPY package.json package-lock.json ./
+COPY package.json ./
+RUN npm install --legacy-peer-deps
+
 
 # Instalamos dependencias
 RUN npm ci
