@@ -1,0 +1,21 @@
+services:
+  backend:
+    build: ./backend
+    container_name: proyecto_isi_backend
+    restart: unless-stopped
+    networks: [pln_net]
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    expose: ["9090"]
+
+  frontend:
+    build: ./frontend
+    container_name: proyecto_isi_frontend
+    restart: unless-stopped
+    ports: ["9390:80"]
+    networks: [pln_net]
+    depends_on: [backend]
+
+networks:
+  pln_net:
+    external: true

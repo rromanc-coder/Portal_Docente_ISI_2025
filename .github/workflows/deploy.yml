@@ -1,83 +1,32 @@
-name: Deploy (principal-isi)
+name: 🚀 Deploy Portal Docente ISI 2025
 
 on:
   push:
-    branches: [ "main" ]
-  workflow_dispatch:
-
-concurrency:
-  group: deploy-principal-isi
-  cancel-in-progress: true
+    branches: [ "main", "deploy" ]
 
 jobs:
-  deploy:
-    runs-on: [ self-hosted, linux, principal-isi ]
-    timeout-minutes: 20
-
+  build-and-deploy:
+    runs-on: self-hosted
+    name: 🔁 Build & Deploy Portal
     steps:
-      - name: Checkout
+      - name: 📥 Checkout repo
         uses: actions/checkout@v4
 
-      - name: Chequeo acceso a Docker
-        shell: bash
+      - name: 🧹 Sync to /srv/pln/proyecto_ISI
         run: |
-          set -euo pipefail
-          docker info >/dev/null
+          mkdir -p /srv/pln/proyecto_ISI
+          rsync -a --delete $GITHUB_WORKSPACE/ /srv/pln/proyecto_ISI/
 
-      # ⬅️ Prechequeos en el repo (carpeta app en la raíz del repo)
-      - name: Prechequeos en repo
-        shell: bash
+      - name: 🐳 Rebuild & Restart
         run: |
-          set -euo pipefail
-          test -f app/Dockerfile       || { echo "Falta app/Dockerfile"; exit 1; }
-          test -f app/requirements.txt || { echo "Falta app/requirements.txt"; exit 1; }
-          test -f app/main.py          || { echo "Falta app/main.py"; exit 1; }
+          cd /srv/pln/proyecto_ISI
+          docker compose down -v || true
+          docker network create pln_net || true
+          docker compose build --no-cache
+          docker compose up -d
+          docker image prune -f
 
-      # ⬅️ Sync SOLO la app del principal al host:
-      # Repo: ./app  → Host: /srv/pln/principal-isi/app
-      - name: Sincronizar código del principal
-        shell: bash
+      - name: ✅ Smoke check
         run: |
-          set -euo pipefail
-          mkdir -p /srv/pln/principal-isi/app
-          rsync -av --delete ./app/ /srv/pln/principal-isi/app/
-          ls -lah /srv/pln/principal-isi/app | sed -n '1,50p'
-
-      # ⬅️ Build/Up del servicio principal-isi usando el compose del host
-      - name: Build + Up (solo principal-isi)
-        shell: bash
-        run: |
-          set -euo pipefail
-          cd /srv/pln
-          # Muestra la sección efectiva para confirmar rutas (build.context debe ser ./principal-isi/app)
-          docker compose config | sed -n '/principal-isi:/,/^[^ ]/p'
-          docker compose build principal-isi
-          docker compose up -d principal-isi
-          docker compose ps principal-isi
-          docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}' | grep principal-isi || true
-
-      # ⬅️ Smoke test (si ya agregaste /health; si no, cambia a "/")
-      - name: Smoke test principal-isi
-        shell: bash
-        run: |
-          set -euo pipefail
-          URL="http://localhost:9090/health"
-          for i in {1..20}; do
-            if curl -fsS "$URL" >/dev/null; then
-              echo "OK principal-isi"; exit 0
-            fi
-            echo "Intento $i: esperando principal-isi..."
-            sleep 2
-          done
-          echo "No respondió $URL, logs:"
-          cd /srv/pln && docker compose logs --tail=200 principal-isi || true
-          exit 1
-
-      - name: Logs en fallo (always)
-        if: ${{ failure() }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          cd /srv/pln
-          docker compose ps principal-isi || true
-          docker compose logs --tail=200 principal-isi || true
+          sleep 2
+          docker ps | grep proyecto_isi_frontend
