@@ -23,7 +23,7 @@ RUN rm /etc/nginx/conf.d/default.conf
 # Copiamos nuestra configuración personalizada
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Copiamos los archivos generados del build anterior
+# Copiamos los archivos generados del build anterior.
 COPY --from=build /app/dist /usr/share/nginx/html
 
 EXPOSE 80
