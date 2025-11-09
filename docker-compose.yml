@@ -1,20 +1,37 @@
+version: "3.9"
+
 services:
   backend:
-    build: ./backend
+    build:
+      context: ./app/backend
+      dockerfile: Dockerfile
     container_name: proyecto_isi_backend
     restart: unless-stopped
-    networks: [pln_net]
+    env_file: .env
+    working_dir: /app
+    ports:
+      - "${BACKEND_PORT}:80"
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    expose: ["9090"]
+      - ./app/backend:/app
+    networks:
+      - pln_net
+    depends_on:
+      - frontend
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./app/frontend
+      dockerfile: Dockerfile
     container_name: proyecto_isi_frontend
     restart: unless-stopped
-    ports: ["9390:80"]
-    networks: [pln_net]
-    depends_on: [backend]
+    ports:
+      - "${FRONTEND_PORT}:3000"
+    volumes:
+      - ./app/frontend:/frontend
+    command: >
+      sh -c "npm install && npm run build --if-present && npx serve -s dist -l 3000"
+    networks:
+      - pln_net
 
 networks:
   pln_net:
