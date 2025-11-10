@@ -1,8 +1,59 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+import { AnimatePresence, motion } from "framer-motion";
 import Layout from "./components/Layout";
 import Home from "./pages/Home";
 import MonitorDashboard from "./pages/MonitorDashboard";
 import EquiposDashboard from "./pages/EquiposDashboard";
+
+function AnimatedRoutes() {
+  const location = useLocation();
+
+  return (
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        <Route
+          path="/"
+          element={
+            <motion.div
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.4, ease: "easeInOut" }}
+            >
+              <Home />
+            </motion.div>
+          }
+        />
+        <Route
+          path="/monitor"
+          element={
+            <motion.div
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.4, ease: "easeInOut" }}
+            >
+              <MonitorDashboard />
+            </motion.div>
+          }
+        />
+        <Route
+          path="/equipos"
+          element={
+            <motion.div
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.4, ease: "easeInOut" }}
+            >
+              <EquiposDashboard />
+            </motion.div>
+          }
+        />
+      </Routes>
+    </AnimatePresence>
+  );
+}
 
 function App() {
   console.log("Versión del build:", import.meta.env.__BUILD_VERSION__);
@@ -10,11 +61,7 @@ function App() {
   return (
     <Router>
       <Layout>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/monitor" element={<MonitorDashboard />} />
-          <Route path="/equipos" element={<EquiposDashboard />} />
-        </Routes>
+        <AnimatedRoutes />
       </Layout>
     </Router>
   );

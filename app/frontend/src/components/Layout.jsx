@@ -69,7 +69,9 @@ const Layout = ({ children }) => {
       </nav>
 
       {/* 🔹 Contenido principal */}
-      <main className="flex-1">{children}</main>
+      <main className="flex-1 transition-opacity duration-500 ease-in-out">
+        {children}
+      </main>
 
       {/* 🔹 Pie de página */}
       <footer className="bg-gray-950 text-gray-500 text-sm text-center py-4 border-t border-gray-800">
