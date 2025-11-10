@@ -1,10 +1,13 @@
+version: "3.9"
 
 services:
   backend:
     build: ./app/backend
     container_name: proyecto_isi_backend
     ports:
-      - "9090:9090"
+      - "9090:80"
+    env_file:
+      - ./app/backend/.env
     networks:
       - pln_net
 
@@ -13,11 +16,9 @@ services:
     container_name: proyecto_isi_frontend
     ports:
       - "9390:80"
-    depends_on:
-      - backend
     networks:
       - pln_net
 
 networks:
   pln_net:
-    driver: bridge
+    external: true
