@@ -1,6 +1,7 @@
+// app/frontend/src/components/Layout.jsx
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, Activity, Users, Home } from "lucide-react";
+import { Menu, X, Activity, Home, Gauge } from "lucide-react";
 
 const Layout = ({ children }) => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -9,11 +10,11 @@ const Layout = ({ children }) => {
   const links = [
     { path: "/", label: "Inicio", icon: <Home size={18} /> },
     { path: "/monitor", label: "Monitoreo", icon: <Activity size={18} /> },
-    { path: "/equipos", label: "Equipos", icon: <Users size={18} /> },
+    { path: "/noc", label: "NOC Técnico", icon: <Gauge size={18} /> },
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-gray-900 via-gray-800 to-black text-gray-100 transition-colors duration-500">
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-gray-950 via-gray-900 to-black text-gray-100 transition-colors duration-500">
       {/* 🔹 Barra superior */}
       <nav className="bg-gray-950/80 border-b border-gray-700 backdrop-blur-md sticky top-0 z-50 shadow-lg">
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">

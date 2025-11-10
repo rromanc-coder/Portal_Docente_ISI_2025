@@ -1,9 +1,10 @@
+// app/frontend/src/App.jsx
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import Layout from "./components/Layout";
 import Home from "./pages/Home";
 import MonitorDashboard from "./pages/MonitorDashboard";
-import EquiposDashboard from "./pages/EquiposDashboard";
+import ServiceDashboard from "./pages/ServiceDashboard"; // NOC Técnico
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -38,7 +39,7 @@ function AnimatedRoutes() {
           }
         />
         <Route
-          path="/equipos"
+          path="/noc"
           element={
             <motion.div
               initial={{ opacity: 0, y: 15 }}
@@ -46,7 +47,7 @@ function AnimatedRoutes() {
               exit={{ opacity: 0, y: -15 }}
               transition={{ duration: 0.4, ease: "easeInOut" }}
             >
-              <EquiposDashboard />
+              <ServiceDashboard />
             </motion.div>
           }
         />

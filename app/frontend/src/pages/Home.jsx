@@ -57,34 +57,38 @@ const sections = [
 
 export default function Home() {
   return (
-    <div className="min-h-screen flex flex-col items-center text-gray-100">
-      <header className="text-center mt-10 mb-10">
+    <div className="min-h-screen flex flex-col items-center text-gray-100 bg-gradient-to-b from-gray-950 via-gray-900 to-black">
+      {/* 🔹 Encabezado principal */}
+      <header className="text-center mt-12 mb-10">
         <motion.h1
           initial={{ opacity: 0, y: -15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="text-4xl font-bold text-green-400 mb-2"
+          className="text-4xl sm:text-5xl font-extrabold text-green-400 mb-3 drop-shadow-[0_0_5px_#22c55e]"
         >
           Bienvenido al Portal Docente ISI 2025
         </motion.h1>
+
         <motion.p
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="text-gray-400 text-lg"
+          className="text-gray-400 text-lg max-w-2xl mx-auto"
         >
-          Supervisión académica, monitoreo de servicios y soporte para tus clases.
+          Supervisión académica, monitoreo de servicios y soporte para tus clases —
+          todo en un solo entorno interactivo y moderno.
         </motion.p>
       </header>
 
-      <section className="grid gap-6 px-4 max-w-6xl w-full sm:grid-cols-2 lg:grid-cols-3">
+      {/* 🔹 Secciones interactivas */}
+      <section className="grid gap-6 px-4 pb-16 max-w-6xl w-full sm:grid-cols-2 lg:grid-cols-3">
         {sections.map((sec, i) => (
           <motion.div
             key={i}
             whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.98 }}
+            whileTap={{ scale: 0.97 }}
             transition={{ type: "spring", stiffness: 200, damping: 10 }}
-            className={`rounded-2xl p-6 cursor-pointer bg-gradient-to-br ${sec.color} shadow-lg hover:shadow-2xl`}
+            className={`rounded-2xl p-6 cursor-pointer bg-gradient-to-br ${sec.color} shadow-lg hover:shadow-2xl hover:brightness-110`}
           >
             <Link to={sec.link || "#"} className="block h-full">
               <div className="flex flex-col items-center text-center space-y-3">
@@ -97,9 +101,13 @@ export default function Home() {
         ))}
       </section>
 
-      <footer className="mt-16 text-sm text-gray-500">
+      {/* 🔹 Pie de página */}
+      <footer className="mb-6 text-sm text-gray-500 text-center px-4">
         <p>
-          Desarrollado con 💚 por estudiantes de Ingeniería en Sistemas Inteligentes – UAEM Nezahualcóyotl
+          Desarrollado con 💚 por estudiantes de{" "}
+          <span className="text-green-400 font-semibold">
+            Ingeniería en Sistemas Inteligentes – UAEM Nezahualcóyotl
+          </span>
         </p>
       </footer>
     </div>
