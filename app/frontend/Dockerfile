@@ -1,27 +1,28 @@
-# ===== Etapa 1: build del frontend (React + Vite) =====
+# ===== Etapa 1: Build con Node =====
 FROM node:20 AS build
 WORKDIR /app
 
-# Copiar dependencias primero para aprovechar caché cuando no cambian
+# Copiamos dependencias y código
 COPY package*.json ./
 RUN npm install
 
-# Copiar el resto del código y construir
 COPY . .
+
+# 🔹 Compila el frontend con Vite
 RUN npm run build
 
-# ===== Etapa 2: servidor Nginx para estáticos =====
+# ===== Etapa 2: Nginx para servir el frontend =====
 FROM nginx:1.25-alpine
 WORKDIR /usr/share/nginx/html
 
-# 🧹 Limpia cualquier build viejo
+# 🔹 Limpia el contenido anterior
 RUN rm -rf ./*
 
-# 📦 Copia el build generado (Vite -> dist/)
+# 🔹 Copia el build nuevo desde la etapa anterior
 COPY --from=build /app/dist ./
 
-# ⚙️ Config personalizado (proxy /api y no-cache de index.html)
-COPY ./nginx.conf /etc/nginx/conf.d/default.conf
+# 🔹 Copia la configuración personalizada de Nginx
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
