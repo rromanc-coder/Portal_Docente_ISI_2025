@@ -1,31 +1,39 @@
-# ===== Etapa 1: Build con Node =====
+
+# ================================
+#   Etapa 1: Build con Node 20
+# ================================
 FROM node:20 AS build
 WORKDIR /app
 
-# Copia solo package.json para aprovechar cache solo en dependencias
+# Copiar solo dependencias primero para aprovechar cache
 COPY package*.json ./
 
-# Limpieza preventiva de cache y reinstalación
-RUN rm -rf node_modules && npm install --legacy-peer-deps
+# Instalar dependencias (sin usar node_modules del host)
+RUN npm ci --legacy-peer-deps
 
-# Copia el resto del proyecto (asegura traer Home.jsx actualizado)
+# Copiar todo el código fuente
 COPY . .
 
-# Fuerza limpieza y build limpio
+# 🔹 Limpieza preventiva y build limpio
 RUN rm -rf dist && npm run build
 
-# ===== Etapa 2: Servir con Nginx =====
+# ================================
+#   Etapa 2: Servir con Nginx
+# ================================
 FROM nginx:1.25-alpine
 WORKDIR /usr/share/nginx/html
 
-# Limpieza del contenido anterior
+# Limpiar contenido anterior
 RUN rm -rf ./*
 
-# Copia el nuevo build desde la etapa anterior
+# Copiar el resultado del build desde la etapa anterior
 COPY --from=build /app/dist ./
 
-# Copia configuración personalizada
+# Copiar configuración personalizada de Nginx
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
+# Exponer el puerto de servicio
 EXPOSE 80
+
+# Iniciar Nginx en modo foreground
 CMD ["nginx", "-g", "daemon off;"]
