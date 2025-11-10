@@ -8,6 +8,7 @@ import {
   BarChart3,
   Settings,
   Brain,
+  Gauge,
 } from "lucide-react";
 
 const sections = [
@@ -17,6 +18,13 @@ const sections = [
     color: "from-green-600 to-emerald-400",
     desc: "Supervisa el estado y disponibilidad de los proyectos PLN e ITM.",
     link: "/monitor",
+  },
+  {
+    title: "NOC Técnico",
+    icon: <Gauge size={40} />,
+    color: "from-red-600 to-orange-400",
+    desc: "Visualiza en tiempo real el estado técnico de cada servicio backend y frontend.",
+    link: "/noc",
   },
   {
     title: "Gestión de Clases",
@@ -37,13 +45,6 @@ const sections = [
     icon: <BarChart3 size={40} />,
     color: "from-yellow-500 to-orange-400",
     desc: "Analiza el rendimiento de los proyectos y servicios.",
-    link: "#",
-  },
-  {
-    title: "Configuración del Portal",
-    icon: <Settings size={40} />,
-    color: "from-gray-600 to-gray-300",
-    desc: "Personaliza la apariencia y comportamiento del sistema.",
     link: "#",
   },
   {
