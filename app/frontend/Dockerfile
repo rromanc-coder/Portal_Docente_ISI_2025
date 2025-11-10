@@ -2,22 +2,28 @@
 FROM node:20 AS build
 WORKDIR /app
 
+# Copia solo los archivos necesarios para instalar dependencias
 COPY package*.json ./
 RUN npm install
 
+# Copia el resto del código fuente, asegurando actualización total
 COPY . .
-# Forzar a Docker a invalidar cache cuando los .jsx cambian
-COPY ./src /app/src
-RUN rm -rf node_modules dist && npm install && npm run build
+
+# 🔹 Limpieza de builds previos y recompilación
+RUN rm -rf dist node_modules && npm install && npm run build
 
 
-# ===== Etapa 2: Nginx para servir el frontend =====
+# ===== Etapa 2: Servir con Nginx =====
 FROM nginx:1.25-alpine
 WORKDIR /usr/share/nginx/html
 
+# 🔹 Elimina el contenido anterior
 RUN rm -rf ./*
 
+# 🔹 Copia el build más reciente
 COPY --from=build /app/dist ./
+
+# 🔹 Configuración personalizada
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
