@@ -1,12 +1,19 @@
-
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from monitor.routes import router as monitor_router
 
-app = FastAPI()
+app = FastAPI(title="Portal Docente ISI 2025 - Backend")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.include_router(monitor_router, prefix="/monitor/api")
 
 @app.get("/health")
-def health():
-    return {"status": "ok"}
-
-@app.get("/")
-def home():
-    return {"message": "Portal Docente ISI 2025 - Backend activo"}
+async def health():
+    return {"status": "ok", "service": "backend"}
