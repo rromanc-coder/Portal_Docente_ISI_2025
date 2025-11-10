@@ -159,7 +159,7 @@ Ejemplo de respuesta:
 ## 👩‍🏫 Créditos
 
 Proyecto académico desarrollado bajo la guía de  
-**M. en C. Ricardo Román Cuevas**  
+**Ingeniero en Sistemas Inteligentes Ricardo Román Cuevas**  
 Centro Universitario UAEM Nezahualcóyotl  
 **Ingeniería en Sistemas Inteligentes – 2025 ©**
 
