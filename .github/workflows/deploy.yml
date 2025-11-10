@@ -23,10 +23,14 @@ jobs:
             --exclude 'runner_portal' \
             --exclude 'app/frontend/node_modules' \
             ./ $DEPLOY_PATH/
-          
+
           cd $DEPLOY_PATH
-          echo "🔁 Reconstruyendo contenedores..."
+          echo "🧹 Limpiando build previo..."
           sudo docker compose down || true
-          sudo docker compose up -d --build
-          
+          sudo docker system prune -af || true
+
+          echo "🔁 Reconstruyendo contenedores..."
+          sudo docker compose up -d --build --force-recreate
+
           echo "✅ Deploy completado exitosamente."
+
