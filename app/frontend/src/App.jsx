@@ -3,8 +3,8 @@ import Home from "./pages/Home";
 import Monitor from "./pages/Monitor";
 
 function App() {
+  console.log("Versión del build:", import.meta.env.__BUILD_VERSION__);
   return (
-    console.log("Versión del build:", import.meta.env.__BUILD_VERSION__);
     <Router>
       <nav className="bg-green-800 text-white px-6 py-4 flex justify-between items-center shadow-md">
         <h1 className="font-bold text-lg">Portal Docente ISI 2025</h1>
