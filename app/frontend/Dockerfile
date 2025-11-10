@@ -6,6 +6,8 @@ COPY package*.json ./
 RUN npm install
 
 COPY . .
+# Forzar a Docker a invalidar cache cuando los .jsx cambian
+COPY ./src /app/src
 RUN rm -rf node_modules dist && npm install && npm run build
 
 
