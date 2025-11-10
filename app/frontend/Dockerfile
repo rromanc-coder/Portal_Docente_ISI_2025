@@ -6,8 +6,8 @@ COPY package*.json ./
 RUN npm install
 
 COPY . .
+RUN rm -rf node_modules dist && npm install && npm run build
 
-RUN npm run build
 
 # ===== Etapa 2: Nginx para servir el frontend =====
 FROM nginx:1.25-alpine
