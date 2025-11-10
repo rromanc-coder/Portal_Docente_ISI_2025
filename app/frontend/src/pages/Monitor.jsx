@@ -1,3 +1,4 @@
+// app/frontend/src/pages/Monitor.jsx
 import { useEffect, useState } from "react";
 
 export default function Monitor() {
@@ -5,7 +6,8 @@ export default function Monitor() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("http://10.5.20.50:9090/monitor/api/status")
+    // ✔ Usa el proxy de Nginx: /api → proyecto_isi_backend:80
+    fetch("/api/monitor/status")
       .then((res) => res.json())
       .then((json) => {
         setData(json.services || []);
@@ -14,45 +16,38 @@ export default function Monitor() {
       .catch(() => setLoading(false));
   }, []);
 
-  const getColor = (latency) => {
-    if (latency === null) return "bg-red-600";
-    if (latency < 100) return "bg-green-600";
-    if (latency < 300) return "bg-yellow-500";
-    return "bg-orange-600";
-  };
-
   return (
-    <div className="p-8">
-      <h2 className="text-3xl font-bold mb-6 text-green-700">📊 Monitoreo de Equipos</h2>
+    <div className="p-6 max-w-5xl mx-auto">
+      <h1 className="text-2xl font-semibold mb-4">Monitor de Servicios</h1>
       {loading ? (
-        <p className="text-gray-500">Cargando estado de los servicios...</p>
+        <p>Cargando...</p>
       ) : (
-        <table className="min-w-full border border-gray-300 text-left">
-          <thead className="bg-green-700 text-white">
+        <table className="min-w-full border">
+          <thead className="bg-gray-100">
             <tr>
-              <th className="p-2">Servicio</th>
-              <th className="p-2">Estado</th>
-              <th className="p-2">Latencia (ms)</th>
-              <th className="p-2">Acceso</th>
-              <th className="p-2">Repositorio</th>
+              <th className="p-2 border">Servicio</th>
+              <th className="p-2 border">Estado</th>
+              <th className="p-2 border">Latencia (ms)</th>
+              <th className="p-2 border">URL</th>
+              <th className="p-2 border">Repo</th>
             </tr>
           </thead>
           <tbody>
             {data.map((s, i) => (
-              <tr key={i} className="border-b">
-                <td className="p-2">{s.name}</td>
-                <td className="p-2">{s.status}</td>
-                <td className={`p-2 text-white ${getColor(s.latency_ms)}`}>
-                  {s.latency_ms !== null ? s.latency_ms : "N/A"}
+              <tr key={i}>
+                <td className="p-2 border">{s.name}</td>
+                <td className={`p-2 border ${s.status === "UP" ? "text-green-700" : "text-red-700"}`}>
+                  {s.status}
                 </td>
-                <td className="p-2">
-                  <a href={s.url} target="_blank" className="text-blue-600 hover:underline">
-                    Ver /health
+                <td className="p-2 border">{s.latency_ms ?? "-"}</td>
+                <td className="p-2 border">
+                  <a href={s.url} className="text-blue-600 hover:underline" target="_blank" rel="noreferrer">
+                    {s.url}
                   </a>
                 </td>
-                <td className="p-2">
-                  <a href={s.repo} target="_blank" className="text-blue-600 hover:underline">
-                    Repo
+                <td className="p-2 border">
+                  <a href={s.repo} className="text-blue-600 hover:underline" target="_blank" rel="noreferrer">
+                    {s.repo}
                   </a>
                 </td>
               </tr>

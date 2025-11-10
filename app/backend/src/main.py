@@ -1,11 +1,11 @@
+# app/backend/src/main.py
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from core.config import settings
-from api.routes import health, metrics
+from api.routes import health, metrics, monitor
 
 app = FastAPI(title="Portal Docente ISI 2025")
 
-# Middleware CORS
+# CORS (ajusta orígenes si lo deseas)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -15,8 +15,9 @@ app.add_middleware(
 )
 
 # Rutas
-app.include_router(health.router)
-app.include_router(metrics.router)
+app.include_router(health.router)   # /health
+app.include_router(metrics.router)  # /metrics
+app.include_router(monitor.router)  # /monitor/*
 
 @app.get("/")
 async def root():
