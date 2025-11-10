@@ -15,7 +15,9 @@ jobs:
 
       - name: 📂 Sincronizando código con /srv/pln/proyecto_ISI
         run: |
+          set -e
           DEPLOY_PATH="/srv/pln/proyecto_ISI"
+
           echo "📂 Sincronizando código con $DEPLOY_PATH..."
           sudo rsync -av --delete \
             --exclude '.git' \
@@ -25,12 +27,16 @@ jobs:
             ./ $DEPLOY_PATH/
 
           cd $DEPLOY_PATH
-          echo "🧹 Limpiando build previo..."
+          echo "🧹 Limpiando build/imágenes previos..."
           sudo docker compose down || true
+          # Limpieza profunda de imágenes y capas
           sudo docker system prune -af || true
+          sudo docker volume prune -f || true
 
-          echo "🔁 Reconstruyendo contenedores..."
-          sudo docker compose up -d --build --force-recreate
+          echo "🔁 Reconstruyendo imágenes SIN CACHÉ..."
+          sudo docker compose build --no-cache
+
+          echo "🚢 Levantando servicios..."
+          sudo docker compose up -d --force-recreate
 
           echo "✅ Deploy completado exitosamente."
-
