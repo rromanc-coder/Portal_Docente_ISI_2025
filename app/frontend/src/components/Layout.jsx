@@ -13,11 +13,11 @@ const Layout = ({ children }) => {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-gray-900 via-gray-800 to-black text-gray-100">
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-gray-900 via-gray-800 to-black text-gray-100 transition-colors duration-500">
       {/* 🔹 Barra superior */}
-      <nav className="bg-gray-950/80 border-b border-gray-700 backdrop-blur-md sticky top-0 z-50">
+      <nav className="bg-gray-950/80 border-b border-gray-700 backdrop-blur-md sticky top-0 z-50 shadow-lg">
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <h1 className="font-bold text-lg sm:text-xl text-green-400 tracking-wide">
+          <h1 className="font-extrabold text-lg sm:text-xl text-green-400 tracking-wide drop-shadow-[0_0_5px_#22c55e] animate-pulse">
             Portal Docente ISI 2025
           </h1>
 
@@ -30,7 +30,7 @@ const Layout = ({ children }) => {
                 className={`flex items-center gap-2 transition-all ${
                   location.pathname === path
                     ? "text-green-400 border-b-2 border-green-400 pb-1"
-                    : "text-gray-300 hover:text-green-300"
+                    : "text-gray-300 hover:text-green-300 hover:scale-105"
                 }`}
               >
                 {icon} {label}
@@ -68,7 +68,7 @@ const Layout = ({ children }) => {
         )}
       </nav>
 
-      {/* 🔹 Contenido principal */}
+      {/* 🔹 Contenido principal con efecto suave */}
       <main className="flex-1 transition-opacity duration-500 ease-in-out">
         {children}
       </main>
