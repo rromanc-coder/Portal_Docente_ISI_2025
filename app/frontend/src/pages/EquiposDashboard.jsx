@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Server, Globe, Github, Activity } from "lucide-react";
+import { Activity, Server, Globe, Github } from "lucide-react";
 
 const EquiposDashboard = () => {
   const [equipos, setEquipos] = useState([]);
@@ -10,7 +10,7 @@ const EquiposDashboard = () => {
       const res = await fetch("/api/monitor/status");
       const data = await res.json();
 
-      // Agrupamos servicios Backend/Frontend por número de equipo
+      // Agrupar servicios Backend/Frontend por número de equipo
       const grupos = {};
       data.services.forEach((s) => {
         const match = s.name.match(/(PLN|ITM).*?(\d+)/);
@@ -22,6 +22,7 @@ const EquiposDashboard = () => {
         }
       });
 
+      // Ordenar por número de equipo
       setEquipos(Object.values(grupos).sort((a, b) => a.numero - b.numero));
     } catch (err) {
       console.error("Error al obtener datos:", err);
@@ -30,7 +31,7 @@ const EquiposDashboard = () => {
 
   useEffect(() => {
     fetchStatus();
-    const interval = setInterval(fetchStatus, 30000);
+    const interval = setInterval(fetchStatus, 30000); // refresco cada 30s
     return () => clearInterval(interval);
   }, []);
 
@@ -53,6 +54,7 @@ const EquiposDashboard = () => {
                 transition={{ delay: idx * 0.03 }}
                 className="p-5 rounded-xl border border-gray-700 bg-gray-800/60 hover:shadow-lg transition-shadow"
               >
+                {/* Encabezado del equipo */}
                 <div className="flex justify-between items-center mb-3">
                   <h2 className="font-semibold text-xl">
                     {e.tipo} {e.numero}
@@ -68,53 +70,85 @@ const EquiposDashboard = () => {
                   </span>
                 </div>
 
-                {e.servicios.map((s, i) => (
-                  <div
-                    key={i}
-                    className="mb-2 p-2 rounded-md bg-gray-900/40 border border-gray-700"
-                  >
-                    <div className="flex justify-between items-center">
-                      <p className="font-medium text-sm">{s.name}</p>
-                      <span
-                        className={`text-xs font-bold ${
+                {/* Sub-secciones Backend / Frontend */}
+                <div className="grid grid-cols-1 gap-2">
+                  {["Backend", "Frontend"].map((rol, i) => {
+                    const s = e.servicios.find((x) =>
+                      x.name.toLowerCase().includes(rol.toLowerCase())
+                    );
+                    if (!s) return null;
+                    return (
+                      <div
+                        key={i}
+                        className={`p-3 rounded-lg border ${
                           s.status === "UP"
-                            ? "text-green-400"
-                            : "text-red-400"
+                            ? "border-green-500 bg-green-900/10"
+                            : "border-red-500 bg-red-900/20"
                         }`}
                       >
-                        {s.status}
-                      </span>
-                    </div>
-                    <p className="text-xs text-gray-400 truncate">
-                      {s.url && (
-                        <a
-                          href={s.url.replace(
-                            /(http:\/\/)[^:]+/,
-                            "http://10.5.20.50"
-                          )}
-                          target="_blank"
-                          className="text-blue-400 hover:underline"
-                        >
-                          {s.url.replace(/(http:\/\/)[^:]+/, "http://10.5.20.50")}
-                        </a>
-                      )}
-                    </p>
-                    <p className="text-xs text-gray-400 truncate">
-                      <a
-                        href={s.repo}
-                        target="_blank"
-                        className="text-purple-400 hover:underline"
-                      >
-                        {s.repo}
-                      </a>
-                    </p>
-                    {s.latency_ms && (
-                      <p className="text-xs text-gray-500 mt-1">
-                        Latencia: {s.latency_ms} ms
-                      </p>
-                    )}
-                  </div>
-                ))}
+                        <div className="flex justify-between items-center mb-1">
+                          <p className="font-medium text-sm flex items-center gap-1">
+                            {rol === "Backend" ? (
+                              <Server className="w-4 h-4 text-gray-400" />
+                            ) : (
+                              <Globe className="w-4 h-4 text-gray-400" />
+                            )}
+                            {rol}
+                          </p>
+                          <span
+                            className={`text-xs font-bold ${
+                              s.status === "UP"
+                                ? "text-green-400"
+                                : "text-red-400"
+                            }`}
+                          >
+                            {s.status}
+                          </span>
+                        </div>
+
+                        {/* URLs y Repos */}
+                        <p className="text-xs text-gray-400 truncate">
+                          <a
+                            href={s.url.replace(
+                              /(http:\/\/)[^:]+/,
+                              "http://10.5.20.50"
+                            )}
+                            target="_blank"
+                            className="text-blue-400 hover:underline"
+                          >
+                            {s.url.replace(
+                              /(http:\/\/)[^:]+/,
+                              "http://10.5.20.50"
+                            )}
+                          </a>
+                        </p>
+                        <p className="text-xs text-gray-400 truncate">
+                          <a
+                            href={s.repo}
+                            target="_blank"
+                            className="text-purple-400 hover:underline flex items-center gap-1"
+                          >
+                            <Github className="w-3 h-3" /> Repositorio
+                          </a>
+                        </p>
+
+                        {s.latency_ms && (
+                          <p
+                            className={`text-xs mt-1 ${
+                              s.latency_ms < 150
+                                ? "text-green-400"
+                                : s.latency_ms < 400
+                                ? "text-yellow-400"
+                                : "text-red-400"
+                            }`}
+                          >
+                            ⏱️ Latencia: {s.latency_ms} ms
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               </motion.div>
             ))}
           </div>

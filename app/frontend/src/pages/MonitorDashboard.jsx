@@ -1,100 +1,172 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Activity, Server, Globe, AlertTriangle } from "lucide-react";
+import { Activity, Server, Globe, AlertTriangle, CheckCircle } from "lucide-react";
 
 const MonitorDashboard = () => {
-  const [services, setServices] = useState([]);
+  const [equipos, setEquipos] = useState([]);
   const [filter, setFilter] = useState("");
 
+  const fetchStatus = async () => {
+    try {
+      const res = await fetch("/api/monitor/status");
+      const data = await res.json();
+
+      // Agrupar servicios Backend/Frontend por número de equipo
+      const grupos = {};
+      data.services.forEach((s) => {
+        const match = s.name.match(/(PLN|ITM).*?(\d+)/);
+        if (match) {
+          const [_, tipo, numero] = match;
+          const key = `${tipo}${numero}`;
+          if (!grupos[key]) grupos[key] = { tipo, numero, servicios: [] };
+          grupos[key].servicios.push(s);
+        }
+      });
+
+      setEquipos(Object.values(grupos).sort((a, b) => a.numero - b.numero));
+    } catch (err) {
+      console.error("Error al obtener el monitoreo:", err);
+    }
+  };
+
   useEffect(() => {
-    const fetchStatus = async () => {
-      try {
-        const res = await fetch("/api/monitor/status");
-        const data = await res.json();
-        setServices(data.services || []);
-      } catch (err) {
-        console.error("Error al obtener el monitoreo:", err);
-      }
-    };
     fetchStatus();
     const interval = setInterval(fetchStatus, 30000); // cada 30s
     return () => clearInterval(interval);
   }, []);
 
-  const filtered = services.filter(s =>
-    s.name.toLowerCase().includes(filter.toLowerCase())
+  // Filtrar por texto (PLN1, ITM5, etc.)
+  const filtered = equipos.filter(
+    (e) =>
+      e.tipo.toLowerCase().includes(filter.toLowerCase()) ||
+      e.numero.toString().includes(filter)
   );
-
-  const groups = {
-    PLN: filtered.filter(s => s.name.startsWith("PLN")),
-    ITM: filtered.filter(s => s.name.startsWith("ITM")),
-  };
 
   return (
     <div className="p-6 min-h-screen bg-gradient-to-b from-gray-900 to-black text-white">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold mb-4 flex items-center gap-2">
-          <Activity className="text-green-400" /> Monitor de Servicios
+        <h1 className="text-3xl font-bold mb-4 flex items-center gap-2 text-green-400">
+          <Activity className="text-green-400" /> Monitor General de Equipos
         </h1>
+
         <input
           type="text"
-          placeholder="Buscar servicio..."
+          placeholder="Buscar equipo (ej. PLN3 o ITM5)..."
           className="w-full mb-6 p-3 rounded-lg bg-gray-800 border border-gray-700 focus:ring-2 focus:ring-green-400"
           onChange={(e) => setFilter(e.target.value)}
         />
 
-        {Object.entries(groups).map(([group, items]) => (
-          <section key={group} className="mb-10">
-            <h2 className="text-2xl font-semibold mb-3 text-green-400">
-              {group === "PLN" ? "📘 Proyectos PLN" : "🧩 Proyectos ITM"}
-            </h2>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {items.map((s, idx) => (
+        {filtered.length === 0 ? (
+          <p className="text-gray-400 text-center">Cargando información...</p>
+        ) : (
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {filtered.map((e, idx) => {
+              const backend = e.servicios.find((s) =>
+                s.name.toLowerCase().includes("backend")
+              );
+              const frontend = e.servicios.find((s) =>
+                s.name.toLowerCase().includes("frontend")
+              );
+
+              const allUp =
+                backend?.status === "UP" && frontend?.status === "UP";
+              const anyDown =
+                backend?.status === "DOWN" || frontend?.status === "DOWN";
+
+              return (
                 <motion.div
                   key={idx}
                   whileHover={{ scale: 1.03 }}
-                  className={`p-4 rounded-xl shadow-lg border 
-                    ${s.status === "UP" ? "border-green-500 bg-gray-800/80" :
-                      s.status === "DOWN" ? "border-red-500 bg-gray-800/40" :
-                      "border-yellow-400 bg-gray-700/60"}`}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.03 }}
+                  className={`p-5 rounded-xl border shadow-md ${
+                    allUp
+                      ? "border-green-500 bg-green-900/10"
+                      : anyDown
+                      ? "border-red-500 bg-red-900/20"
+                      : "border-yellow-400 bg-yellow-900/10"
+                  }`}
                 >
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-semibold text-lg">{s.name}</h3>
-                    {s.status === "UP" ? (
-                      <Server className="text-green-400" />
-                    ) : s.status === "DOWN" ? (
+                  <div className="flex justify-between items-center mb-2">
+                    <h2 className="font-semibold text-xl">
+                      {e.tipo} {e.numero}
+                    </h2>
+                    {allUp ? (
+                      <CheckCircle className="text-green-400" />
+                    ) : anyDown ? (
                       <AlertTriangle className="text-red-400" />
                     ) : (
                       <Globe className="text-yellow-400" />
                     )}
                   </div>
-                  <p className="text-sm text-gray-400 truncate">
-                    {s.url ? <a href={s.url} className="text-blue-400 hover:underline">{s.url}</a> : "—"}
-                  </p>
-                  <p className="text-sm text-gray-400 truncate">
-                    <a href={s.repo} className="text-purple-400 hover:underline">
-                      {s.repo}
-                    </a>
-                  </p>
-                  <div className="mt-2 text-sm">
-                    <span className={`font-bold ${
-                      s.status === "UP" ? "text-green-400" :
-                      s.status === "DOWN" ? "text-red-400" :
-                      "text-yellow-300"
-                    }`}>
-                      {s.status || "—"}
+
+                  {/* Backend */}
+                  {backend && (
+                    <div className="text-sm mb-1">
+                      <div className="flex justify-between">
+                        <span className="flex items-center gap-1 text-gray-300">
+                          <Server className="w-4 h-4" /> Backend
+                        </span>
+                        <span
+                          className={`font-bold ${
+                            backend.status === "UP"
+                              ? "text-green-400"
+                              : "text-red-400"
+                          }`}
+                        >
+                          {backend.status}
+                        </span>
+                      </div>
+                      {backend.latency_ms && (
+                        <p className="text-xs text-gray-500">
+                          ⏱️ {backend.latency_ms} ms
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Frontend */}
+                  {frontend && (
+                    <div className="text-sm">
+                      <div className="flex justify-between">
+                        <span className="flex items-center gap-1 text-gray-300">
+                          <Globe className="w-4 h-4" /> Frontend
+                        </span>
+                        <span
+                          className={`font-bold ${
+                            frontend.status === "UP"
+                              ? "text-green-400"
+                              : "text-red-400"
+                          }`}
+                        >
+                          {frontend.status}
+                        </span>
+                      </div>
+                      {frontend.latency_ms && (
+                        <p className="text-xs text-gray-500">
+                          ⏱️ {frontend.latency_ms} ms
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="mt-3 flex justify-between text-xs text-gray-400">
+                    <span>
+                      {e.tipo === "PLN" ? "📘 Proyecto PLN" : "🧩 Proyecto ITM"}
                     </span>
-                    {s.latency_ms && (
-                      <span className="ml-2 text-gray-400">
-                        {s.latency_ms} ms
-                      </span>
-                    )}
+                    <span>
+                      {new Date().toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </span>
                   </div>
                 </motion.div>
-              ))}
-            </div>
-          </section>
-        ))}
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );
