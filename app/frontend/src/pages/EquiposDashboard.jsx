@@ -13,27 +13,28 @@ const EquiposDashboard = () => {
       const grupos = {};
 
       data.services.forEach((s) => {
-        // 🔍 Intentar extraer tipo (PLN/ITM)
-        const tipoMatch = s.name.match(/PLN|ITM/i);
-        const tipo = tipoMatch ? tipoMatch[0].toUpperCase() : "OTRO";
+        // Extraer tipo (PLN o ITM)
+        const tipoMatch = s.name.match(/(PLN|ITM)/i);
+        const tipo = tipoMatch ? tipoMatch[1].toUpperCase() : "OTRO";
 
-        // 🔍 Intentar extraer número desde nombre o puerto del URL
-        let numero = null;
-        const numName = s.name.match(/(\d{1,2})/);
-        const numURL = s.url?.match(/(\d{4})/); // ej. puerto 9001, 9301, etc.
-        if (numName) numero = parseInt(numName[1]);
-        else if (numURL)
-          numero = parseInt(numURL[1].slice(-2)); // usa los últimos 2 dígitos (01, 02, etc.)
-        if (!numero) numero = 0; // fallback
+        // Extraer número de puerto final (9001 -> 1, 9103 -> 3, etc.)
+        const portMatch = s.url.match(/(\d{4})/);
+        let numero = 0;
+        if (portMatch) {
+          const port = parseInt(portMatch[1]);
+          numero = port % 100; // Ej. 9001 → 1, 9108 → 8
+        }
 
         const key = `${tipo}${numero}`;
         if (!grupos[key]) grupos[key] = { tipo, numero, servicios: [] };
         grupos[key].servicios.push(s);
       });
 
-      setEquipos(
-        Object.values(grupos).sort((a, b) => a.numero - b.numero)
+      // Ordenar por número
+      const lista = Object.values(grupos).sort(
+        (a, b) => a.tipo.localeCompare(b.tipo) || a.numero - b.numero
       );
+      setEquipos(lista);
     } catch (err) {
       console.error("Error al obtener datos:", err);
     }
@@ -64,7 +65,7 @@ const EquiposDashboard = () => {
                 transition={{ delay: idx * 0.03 }}
                 className="p-5 rounded-xl border border-gray-700 bg-gray-800/60 hover:shadow-lg transition-shadow"
               >
-                {/* Encabezado */}
+                {/* Encabezado del equipo */}
                 <div className="flex justify-between items-center mb-3">
                   <h2 className="font-semibold text-xl">
                     {e.tipo} {e.numero}
@@ -80,7 +81,7 @@ const EquiposDashboard = () => {
                   </span>
                 </div>
 
-                {/* Bloques Backend / Frontend */}
+                {/* Secciones Backend / Frontend */}
                 <div className="grid grid-cols-1 gap-2">
                   {["Backend", "Frontend"].map((rol, i) => {
                     const s = e.servicios.find((x) =>
@@ -119,23 +120,19 @@ const EquiposDashboard = () => {
                         {/* URLs */}
                         <p className="text-xs text-gray-400 truncate">
                           <a
-                            href={s.url.replace(
-                              /(http:\/\/)[^:]+/,
-                              "http://10.5.20.50"
-                            )}
+                            href={s.url}
                             target="_blank"
+                            rel="noreferrer"
                             className="text-blue-400 hover:underline"
                           >
-                            {s.url.replace(
-                              /(http:\/\/)[^:]+/,
-                              "http://10.5.20.50"
-                            )}
+                            {s.url}
                           </a>
                         </p>
                         <p className="text-xs text-gray-400 truncate">
                           <a
                             href={s.repo}
                             target="_blank"
+                            rel="noreferrer"
                             className="text-purple-400 hover:underline flex items-center gap-1"
                           >
                             <Github className="w-3 h-3" /> Repositorio
