@@ -10,20 +10,30 @@ const EquiposDashboard = () => {
       const res = await fetch("/api/monitor/status");
       const data = await res.json();
 
-      // Agrupar servicios Backend/Frontend por número de equipo
       const grupos = {};
+
       data.services.forEach((s) => {
-        const match = s.name.match(/(PLN|ITM).*?(\d+)/);
-        if (match) {
-          const [_, tipo, numero] = match;
-          const key = `${tipo}${numero}`;
-          if (!grupos[key]) grupos[key] = { tipo, numero, servicios: [] };
-          grupos[key].servicios.push(s);
-        }
+        // 🔍 Intentar extraer tipo (PLN/ITM)
+        const tipoMatch = s.name.match(/PLN|ITM/i);
+        const tipo = tipoMatch ? tipoMatch[0].toUpperCase() : "OTRO";
+
+        // 🔍 Intentar extraer número desde nombre o puerto del URL
+        let numero = null;
+        const numName = s.name.match(/(\d{1,2})/);
+        const numURL = s.url?.match(/(\d{4})/); // ej. puerto 9001, 9301, etc.
+        if (numName) numero = parseInt(numName[1]);
+        else if (numURL)
+          numero = parseInt(numURL[1].slice(-2)); // usa los últimos 2 dígitos (01, 02, etc.)
+        if (!numero) numero = 0; // fallback
+
+        const key = `${tipo}${numero}`;
+        if (!grupos[key]) grupos[key] = { tipo, numero, servicios: [] };
+        grupos[key].servicios.push(s);
       });
 
-      // Ordenar por número de equipo
-      setEquipos(Object.values(grupos).sort((a, b) => a.numero - b.numero));
+      setEquipos(
+        Object.values(grupos).sort((a, b) => a.numero - b.numero)
+      );
     } catch (err) {
       console.error("Error al obtener datos:", err);
     }
@@ -31,7 +41,7 @@ const EquiposDashboard = () => {
 
   useEffect(() => {
     fetchStatus();
-    const interval = setInterval(fetchStatus, 30000); // refresco cada 30s
+    const interval = setInterval(fetchStatus, 30000);
     return () => clearInterval(interval);
   }, []);
 
@@ -39,7 +49,7 @@ const EquiposDashboard = () => {
     <div className="p-6 min-h-screen bg-gradient-to-b from-gray-900 to-black text-white">
       <div className="max-w-6xl mx-auto">
         <h1 className="text-3xl font-bold mb-6 flex items-center gap-2 text-green-400">
-          <Activity className="text-green-400" /> Dashboard de Equipos
+          <Activity className="text-green-400" /> NOC Técnico – ISI 2025
         </h1>
 
         {equipos.length === 0 ? (
@@ -54,7 +64,7 @@ const EquiposDashboard = () => {
                 transition={{ delay: idx * 0.03 }}
                 className="p-5 rounded-xl border border-gray-700 bg-gray-800/60 hover:shadow-lg transition-shadow"
               >
-                {/* Encabezado del equipo */}
+                {/* Encabezado */}
                 <div className="flex justify-between items-center mb-3">
                   <h2 className="font-semibold text-xl">
                     {e.tipo} {e.numero}
@@ -70,7 +80,7 @@ const EquiposDashboard = () => {
                   </span>
                 </div>
 
-                {/* Sub-secciones Backend / Frontend */}
+                {/* Bloques Backend / Frontend */}
                 <div className="grid grid-cols-1 gap-2">
                   {["Backend", "Frontend"].map((rol, i) => {
                     const s = e.servicios.find((x) =>
@@ -106,7 +116,7 @@ const EquiposDashboard = () => {
                           </span>
                         </div>
 
-                        {/* URLs y Repos */}
+                        {/* URLs */}
                         <p className="text-xs text-gray-400 truncate">
                           <a
                             href={s.url.replace(
