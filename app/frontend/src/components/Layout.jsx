@@ -9,7 +9,7 @@ const Layout = ({ children }) => {
 
   const links = [
     { path: "/", label: "Inicio", icon: <Home size={18} /> },
-    { path: "/monitor", label: "Monitoreo", icon: <Activity size={18} /> },
+    { path: "/noc/metrics", label: "Monitoreo", icon: <Activity size={18} /> },
     { path: "/noc", label: "NOC Técnico", icon: <Gauge size={18} /> },
   ];
 
