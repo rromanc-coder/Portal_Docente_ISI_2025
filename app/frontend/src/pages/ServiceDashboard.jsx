@@ -15,33 +15,30 @@ export default function ServiceDashboard() {
       const services = data.services || [];
 
       // ============================================================
-      // AGRUPADOR NUEVO — AHORA SÍ UNE BACKEND + FRONTEND POR EQUIPO
+      // AGRUPADOR — COMBINA backend + frontend por número de equipo
       // ============================================================
       const grupos = {};
 
       services.forEach((s) => {
         if (!s.url) return;
 
-        // Extraer puerto de la URL: http://10.5.20.50:9001/health
         const portMatch = s.url.match(/:(\d+)\//);
         if (!portMatch) return;
 
         const port = parseInt(portMatch[1], 10);
 
-        // Determinar tipo PLN/ITM desde el nombre
         let tipo = "OTRO";
         if (s.name.startsWith("PLN")) tipo = "PLN";
         else if (s.name.startsWith("ITM")) tipo = "ITM";
 
-        // Calcular número de equipo según el puerto
         let num = null;
 
         if (tipo === "PLN") {
-          if (port >= 9001 && port <= 9006) num = port - 9000;   // Backend PLN
-          if (port >= 9301 && port <= 9306) num = port - 9300;   // Frontend PLN
+          if (port >= 9001 && port <= 9006) num = port - 9000;     // Backend PLN
+          if (port >= 9301 && port <= 9306) num = port - 9300;     // Frontend PLN
         } else if (tipo === "ITM") {
-          if (port >= 9101 && port <= 9108) num = port - 9100;   // Backend ITM
-          if (port >= 9401 && port <= 9408) num = port - 9400;   // Frontend ITM
+          if (port >= 9101 && port <= 9108) num = port - 9100;     // Backend ITM
+          if (port >= 9401 && port <= 9408) num = port - 9400;     // Frontend ITM
         }
 
         if (num === null) return;
@@ -74,12 +71,8 @@ export default function ServiceDashboard() {
 
   // --- Estadísticas globales ---
   const stats = useMemo(() => {
-    let up = 0,
-      down = 0,
-      slow = 0,
-      total = 0;
-    let plnLat = [],
-      itmLat = [];
+    let up = 0, down = 0, slow = 0, total = 0;
+    let plnLat = [], itmLat = [];
 
     equipos.forEach((e) => {
       [e.backend, e.frontend].forEach((s) => {
@@ -113,12 +106,9 @@ export default function ServiceDashboard() {
   }, [equipos]);
 
   const colorEstado = (status, latency) => {
-    if (status === "DOWN")
-      return "bg-red-900/30 border-red-600 text-red-300";
-    if (latency && latency > 800)
-      return "bg-yellow-900/30 border-yellow-600 text-yellow-300";
-    if (status === "UP")
-      return "bg-green-900/30 border-green-600 text-green-300";
+    if (status === "DOWN") return "bg-red-900/30 border-red-600 text-red-300";
+    if (latency && latency > 800) return "bg-yellow-900/30 border-yellow-600 text-yellow-300";
+    if (status === "UP") return "bg-green-900/30 border-green-600 text-green-300";
     return "bg-gray-800/50 border-gray-600 text-gray-400";
   };
 
@@ -208,11 +198,10 @@ export default function ServiceDashboard() {
                         </>
                       )}
                     </span>
-                    <span className="text-xs font-bold">
-                      {s?.status || "—"}
-                    </span>
+                    <span className="text-xs font-bold">{s?.status || "—"}</span>
                   </div>
 
+                  {/* URL */}
                   <p className="text-xs truncate">
                     {s?.url && (
                       <a
@@ -232,6 +221,7 @@ export default function ServiceDashboard() {
                     )}
                   </p>
 
+                  {/* REPO */}
                   <p className="text-xs truncate">
                     <a
                       href={s?.repo}
@@ -243,11 +233,25 @@ export default function ServiceDashboard() {
                     </a>
                   </p>
 
+                  {/* Latencia */}
                   {s?.latency_ms && (
                     <p className="text-xs text-gray-400 mt-1">
                       Latencia: {s.latency_ms} ms
                     </p>
                   )}
+
+                  {/* === Botón Ver Logs === */}
+                  <a
+                    href={`/noc/logs/${
+                      s?.name?.toLowerCase().includes("backend")
+                        ? `${e.tipo.toLowerCase()}${e.num}_backend`
+                        : `${e.tipo.toLowerCase()}${e.num}_frontend`
+                    }`}
+                    className="text-xs text-blue-400 hover:underline mt-2 block"
+                  >
+                    Ver logs →
+                  </a>
+
                 </div>
               ))}
             </motion.div>
@@ -256,8 +260,7 @@ export default function ServiceDashboard() {
 
         {/* === Pie NOC === */}
         <footer className="text-center text-xs text-gray-600 mt-8">
-          NOC Portal Docente ISI 2025 • Actualización cada{" "}
-          {REFRESH_INTERVAL / 1000}s
+          NOC Portal Docente ISI 2025 • Actualización cada {REFRESH_INTERVAL / 1000}s
         </footer>
       </div>
     </div>

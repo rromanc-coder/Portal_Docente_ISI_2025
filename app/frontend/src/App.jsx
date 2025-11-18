@@ -4,6 +4,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import Layout from "./components/Layout";
 import Home from "./pages/Home";
 import ServiceDashboard from "./pages/ServiceDashboard"; // NOC Técnico
+import LogsViewer from "./pages/LogsViewer";
+
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -37,6 +39,20 @@ function AnimatedRoutes() {
             </motion.div>
           }
         />
+        <Route
+          path="/noc/logs/:containerName"
+          element={
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <LogsViewer />
+            </motion.div>
+          }
+        />
+
       </Routes>
     </AnimatePresence>
   );
