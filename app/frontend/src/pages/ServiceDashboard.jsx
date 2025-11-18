@@ -14,9 +14,6 @@ export default function ServiceDashboard() {
       const data = await res.json();
       const services = data.services || [];
 
-      // ============================================================
-      // AGRUPADOR — COMBINA backend + frontend por número de equipo
-      // ============================================================
       const grupos = {};
 
       services.forEach((s) => {
@@ -34,11 +31,11 @@ export default function ServiceDashboard() {
         let num = null;
 
         if (tipo === "PLN") {
-          if (port >= 9001 && port <= 9006) num = port - 9000;     // Backend PLN
-          if (port >= 9301 && port <= 9306) num = port - 9300;     // Frontend PLN
+          if (port >= 9001 && port <= 9006) num = port - 9000;
+          if (port >= 9301 && port <= 9306) num = port - 9300;
         } else if (tipo === "ITM") {
-          if (port >= 9101 && port <= 9108) num = port - 9100;     // Backend ITM
-          if (port >= 9401 && port <= 9408) num = port - 9400;     // Frontend ITM
+          if (port >= 9101 && port <= 9108) num = port - 9100;
+          if (port >= 9401 && port <= 9408) num = port - 9400;
         }
 
         if (num === null) return;
@@ -69,7 +66,6 @@ export default function ServiceDashboard() {
     return () => clearInterval(interval);
   }, []);
 
-  // --- Estadísticas globales ---
   const stats = useMemo(() => {
     let up = 0, down = 0, slow = 0, total = 0;
     let plnLat = [], itmLat = [];
@@ -77,15 +73,11 @@ export default function ServiceDashboard() {
     equipos.forEach((e) => {
       [e.backend, e.frontend].forEach((s) => {
         if (!s) return;
-
         total++;
-
         if (s.status === "UP") {
           up++;
           if (s.latency_ms && s.latency_ms > 800) slow++;
-        } else if (s.status === "DOWN") {
-          down++;
-        }
+        } else if (s.status === "DOWN") down++;
 
         if (e.tipo === "PLN" && s.latency_ms) plnLat.push(s.latency_ms);
         if (e.tipo === "ITM" && s.latency_ms) itmLat.push(s.latency_ms);
@@ -112,11 +104,27 @@ export default function ServiceDashboard() {
     return "bg-gray-800/50 border-gray-600 text-gray-400";
   };
 
+  // ======================================================
+  // 🔥 FUNCIÓN NUEVA: nombre real del contenedor Docker
+  // ======================================================
+  const nombreContenedor = (tipo, num, esBackend) => {
+    if (tipo === "PLN") {
+      return esBackend
+        ? `equipo${num}_backend`
+        : `equipo${num}_frontend`;
+    }
+    if (tipo === "ITM") {
+      return esBackend
+        ? `itm${num}_backend`
+        : `itm${num}_frontend`;
+    }
+    return "desconocido";
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-950 via-gray-900 to-black text-white p-6">
       <div className="max-w-7xl mx-auto space-y-8">
         
-        {/* ======= Header tipo NOC ======= */}
         <header className="bg-gray-900/80 border border-gray-700 rounded-xl p-4 flex flex-wrap justify-between items-center shadow-lg">
           <div className="flex items-center gap-2">
             <Activity className="text-green-400" size={24} />
@@ -129,7 +137,6 @@ export default function ServiceDashboard() {
           </div>
         </header>
 
-        {/* ======= Estadísticas Globales ======= */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -155,7 +162,7 @@ export default function ServiceDashboard() {
           </div>
         </motion.div>
 
-        {/* ======= Tarjetas de Equipos ======= */}
+        {/* Tarjetas */}
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {equipos.map((e, idx) => (
             <motion.div
@@ -178,87 +185,83 @@ export default function ServiceDashboard() {
                 </span>
               </div>
 
-              {[e.backend, e.frontend].map((s, i) => (
-                <div
-                  key={i}
-                  className={`mb-3 p-3 rounded-lg border ${colorEstado(
-                    s?.status,
-                    s?.latency_ms
-                  )}`}
-                >
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="font-semibold text-sm flex items-center gap-1">
-                      {s?.name?.toLowerCase().includes("backend") ? (
-                        <>
-                          <Server size={14} /> Backend
-                        </>
-                      ) : (
-                        <>
-                          <Globe size={14} /> Frontend
-                        </>
-                      )}
-                    </span>
-                    <span className="text-xs font-bold">{s?.status || "—"}</span>
-                  </div>
+              {[e.backend, e.frontend].map((s, i) => {
+                const esBackend = s?.name?.toLowerCase().includes("backend");
+                const contenedor = nombreContenedor(e.tipo, e.num, esBackend);
 
-                  {/* URL */}
-                  <p className="text-xs truncate">
-                    {s?.url && (
-                      <a
-                        href={s.url.replace(
-                          /(http:\/\/)[^:]+/,
-                          "http://10.5.20.50"
+                return (
+                  <div
+                    key={i}
+                    className={`mb-3 p-3 rounded-lg border ${colorEstado(
+                      s?.status,
+                      s?.latency_ms
+                    )}`}
+                  >
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="font-semibold text-sm flex items-center gap-1">
+                        {esBackend ? (
+                          <>
+                            <Server size={14} /> Backend
+                          </>
+                        ) : (
+                          <>
+                            <Globe size={14} /> Frontend
+                          </>
                         )}
+                      </span>
+                      <span className="text-xs font-bold">{s?.status || "—"}</span>
+                    </div>
+
+                    {/* URL */}
+                    {s?.url && (
+                      <p className="text-xs truncate">
+                        <a
+                          href={s.url.replace(/(http:\/\/)[^:]+/, "http://10.5.20.50")}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-blue-400 hover:underline"
+                        >
+                          {s.url.replace(
+                            /(http:\/\/)[^:]+/,
+                            "http://10.5.20.50"
+                          )}
+                        </a>
+                      </p>
+                    )}
+
+                    {/* Repo */}
+                    <p className="text-xs truncate">
+                      <a
+                        href={s?.repo}
                         target="_blank"
                         rel="noreferrer"
-                        className="text-blue-400 hover:underline"
+                        className="text-purple-400 hover:underline"
                       >
-                        {s.url.replace(
-                          /(http:\/\/)[^:]+/,
-                          "http://10.5.20.50"
-                        )}
+                        {s?.repo}
                       </a>
-                    )}
-                  </p>
-
-                  {/* REPO */}
-                  <p className="text-xs truncate">
-                    <a
-                      href={s?.repo}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-purple-400 hover:underline"
-                    >
-                      {s?.repo}
-                    </a>
-                  </p>
-
-                  {/* Latencia */}
-                  {s?.latency_ms && (
-                    <p className="text-xs text-gray-400 mt-1">
-                      Latencia: {s.latency_ms} ms
                     </p>
-                  )}
 
-                  {/* === Botón Ver Logs === */}
-                  <a
-                    href={`/noc/logs/${
-                      s?.name?.toLowerCase().includes("backend")
-                        ? `${e.tipo.toLowerCase()}${e.num}_backend`
-                        : `${e.tipo.toLowerCase()}${e.num}_frontend`
-                    }`}
-                    className="text-xs text-blue-400 hover:underline mt-2 block"
-                  >
-                    Ver logs →
-                  </a>
+                    {/* Latencia */}
+                    {s?.latency_ms && (
+                      <p className="text-xs text-gray-400 mt-1">
+                        Latencia: {s.latency_ms} ms
+                      </p>
+                    )}
 
-                </div>
-              ))}
+                    {/* Botón Ver Logs */}
+                    <a
+                      href={`/noc/logs/${contenedor}`}
+                      className="text-xs text-blue-400 hover:underline mt-2 block"
+                    >
+                      Ver logs →
+                    </a>
+                  </div>
+                );
+              })}
             </motion.div>
           ))}
         </div>
 
-        {/* === Pie NOC === */}
         <footer className="text-center text-xs text-gray-600 mt-8">
           NOC Portal Docente ISI 2025 • Actualización cada {REFRESH_INTERVAL / 1000}s
         </footer>
