@@ -3,7 +3,6 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from "react-route
 import { AnimatePresence, motion } from "framer-motion";
 import Layout from "./components/Layout";
 import Home from "./pages/Home";
-import MonitorDashboard from "./pages/MonitorDashboard";
 import ServiceDashboard from "./pages/ServiceDashboard"; // NOC Técnico
 
 function AnimatedRoutes() {
@@ -22,19 +21,6 @@ function AnimatedRoutes() {
               transition={{ duration: 0.4, ease: "easeInOut" }}
             >
               <Home />
-            </motion.div>
-          }
-        />
-        <Route
-          path="/monitor"
-          element={
-            <motion.div
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -15 }}
-              transition={{ duration: 0.4, ease: "easeInOut" }}
-            >
-              <MonitorDashboard />
             </motion.div>
           }
         />
