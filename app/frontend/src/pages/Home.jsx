@@ -17,8 +17,9 @@ const sections = [
     icon: <Activity size={40} />,
     color: "from-green-600 to-emerald-400",
     desc: "Supervisa el estado y disponibilidad de los proyectos PLN e ITM.",
-    link: "/monitor",
+    link: "/noc/metrics",
   },
+
   {
     title: "NOC Técnico",
     icon: <Gauge size={40} />,
