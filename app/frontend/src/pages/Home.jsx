@@ -13,7 +13,7 @@ import {
 
 const sections = [
   {
-    title: "Monitoreo de Equipos",
+    title: "Métricas NOC",
     icon: <Activity size={40} />,
     color: "from-green-600 to-emerald-400",
     desc: "Supervisa el estado y disponibilidad de los proyectos PLN e ITM.",
