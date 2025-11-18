@@ -1,7 +1,7 @@
 # app/backend/src/main.py
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from api.routes import health, metrics, monitor
+from api.routes import health, metrics, monitor, logs
 
 app = FastAPI(title="Portal Docente ISI 2025")
 
@@ -18,6 +18,7 @@ app.add_middleware(
 app.include_router(health.router)   # /health
 app.include_router(metrics.router)  # /metrics
 app.include_router(monitor.router)  # /monitor/*
+app.include_router(logs.router)     # /api/logs
 
 @app.get("/")
 async def root():
