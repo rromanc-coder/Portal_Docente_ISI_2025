@@ -1,105 +1,126 @@
-import { useEffect, useState } from "react";
+// app/frontend/src/pages/LogsViewer.jsx
+
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { RefreshCcw, Terminal, Clock } from "lucide-react";
-
-const REFRESH_INTERVAL = 5000; // 5s
+import { Pause, Play, ChevronDown, Loader2 } from "lucide-react";
 
 export default function LogsViewer() {
   const { containerName } = useParams();
-  const [logs, setLogs] = useState("");
-  const [lines, setLines] = useState(300);
-  const [lastUpdated, setLastUpdated] = useState(null);
-  const [loading, setLoading] = useState(false);
+
+  const [logs, setLogs] = useState("Cargando logs...");
+  const [autoScroll, setAutoScroll] = useState(true);
+  const [paused, setPaused] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  const logsRef = useRef(null);
 
   const fetchLogs = async () => {
+    if (paused) return; // No refrescar si está pausado
+
     try {
-      setLoading(true);
-      const res = await fetch(`/api/logs/${containerName}?lines=${lines}`);
-      const data = await res.json();
-      setLogs(data.logs || "Sin datos");
-      setLastUpdated(new Date().toLocaleTimeString());
-    } catch (error) {
-      setLogs("⚠ Error al obtener logs.");
-    } finally {
+      const res = await fetch(`/api/logs/${containerName}?lines=300`);
+      const json = await res.json();
+      setLogs(json.logs || "Sin datos");
       setLoading(false);
+    } catch (err) {
+      setLogs("Error al obtener logs.");
     }
   };
 
   useEffect(() => {
     fetchLogs();
-    const interval = setInterval(fetchLogs, REFRESH_INTERVAL);
+    const interval = setInterval(fetchLogs, 2000); // Auto-refresh cada 2s
     return () => clearInterval(interval);
-  }, [containerName, lines]);
+  }, [containerName, paused]);
 
-  const lineOptions = [100, 200, 300, 500, 1000, 2000];
+  // Auto-scroll al final
+  useEffect(() => {
+    if (autoScroll && logsRef.current) {
+      logsRef.current.scrollTop = logsRef.current.scrollHeight;
+    }
+  }, [logs, autoScroll]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-black via-gray-900 to-black text-white p-6">
+    <div className="min-h-screen bg-gradient-to-b from-gray-950 via-gray-900 to-black text-white p-6">
       <div className="max-w-6xl mx-auto space-y-6">
 
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -15 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex justify-between items-center border border-gray-700 bg-gray-900/60 p-4 rounded-xl shadow-md"
-        >
-          <div className="flex items-center gap-3">
-            <Terminal size={28} className="text-green-400" />
-            <h1 className="text-2xl font-bold">
-              Logs de <span className="text-green-300">{containerName}</span>
-            </h1>
-          </div>
-          <div className="text-sm text-gray-400 flex items-center gap-2">
-            <Clock size={14} />
-            Última actualización: {lastUpdated || "—"}
-          </div>
-        </motion.div>
+        {/* Título */}
+        <header className="bg-gray-900/50 border border-gray-700 rounded-xl p-4 flex justify-between items-center shadow">
+          <h2 className="text-xl font-bold text-green-400">
+            Logs — {containerName}
+          </h2>
 
-        {/* Settings */}
-        <div className="flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <label className="text-gray-300 text-sm">Líneas:</label>
-            <select
-              value={lines}
-              onChange={(e) => setLines(Number(e.target.value))}
-              className="bg-gray-800 border border-gray-700 p-2 rounded-lg text-sm"
-            >
-              {lineOptions.map((opt) => (
-                <option key={opt} value={opt}>{opt}</option>
-              ))}
-            </select>
 
+            {/* Botón Pausar / Reanudar */}
             <button
-              onClick={fetchLogs}
-              className="flex items-center gap-2 bg-gray-800 border border-gray-700 px-3 py-2 rounded-lg hover:bg-gray-700 transition"
+              onClick={() => setPaused(!paused)}
+              className="px-4 py-2 bg-gray-800 border border-gray-600 rounded-lg hover:bg-gray-700 transition flex items-center gap-2"
             >
-              <RefreshCcw size={16} className={loading ? "animate-spin" : ""} />
-              Refrescar
+              {paused ? (
+                <>
+                  <Play size={16} /> Reanudar
+                </>
+              ) : (
+                <>
+                  <Pause size={16} /> Pausar
+                </>
+              )}
+            </button>
+
+            {/* Ir al final */}
+            <button
+              onClick={() => {
+                setAutoScroll(true);
+                setTimeout(() => {
+                  if (logsRef.current) {
+                    logsRef.current.scrollTop = logsRef.current.scrollHeight;
+                  }
+                }, 200);
+              }}
+              className="px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg hover:bg-gray-700 transition flex items-center gap-1"
+            >
+              <ChevronDown size={18} />
             </button>
           </div>
+        </header>
 
-          <a
-            href="/noc"
-            className="text-sm text-blue-400 hover:underline"
-          >
-            ⬅ Regresar al NOC
-          </a>
-        </div>
-
-        {/* Logs Box */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="bg-black border border-green-700 rounded-xl p-4 shadow-inner"
-          style={{ height: "70vh", overflowY: "auto" }}
+        {/* Contenedor de logs */}
+        <div
+          ref={logsRef}
+          className="bg-black border border-gray-700 rounded-xl p-4 h-[70vh] overflow-y-auto font-mono text-sm whitespace-pre-wrap leading-5 shadow-inner"
         >
-          <pre className="whitespace-pre-wrap font-mono text-sm text-green-300">
-            {logs || "Cargando logs..."}
-          </pre>
-        </motion.div>
+          {loading ? (
+            <div className="flex items-center gap-3 text-gray-400">
+              <Loader2 size={20} className="animate-spin" />
+              Cargando logs...
+            </div>
+          ) : (
+            <pre className="text-gray-300">
+              {highlightErrors(logs)}
+            </pre>
+          )}
+        </div>
 
       </div>
     </div>
   );
+}
+
+// ---- Función para resaltar errores ----
+function highlightErrors(text) {
+  if (!text) return "";
+
+  // Palabras clave a resaltar
+  const keywords = ["ERROR", "Error", "Exception", "Traceback", "WARN", "WARNING"];
+
+  let html = text;
+
+  keywords.forEach((word) => {
+    const regex = new RegExp(word, "g");
+    html = html.replace(regex, `<span style="color:#f87171; font-weight:bold">${word}</span>`);
+  });
+
+  return <span dangerouslySetInnerHTML={{ __html: html }} />;
 }
