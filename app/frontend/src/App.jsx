@@ -5,6 +5,7 @@ import Layout from "./components/Layout";
 import Home from "./pages/Home";
 import ServiceDashboard from "./pages/ServiceDashboard"; // NOC Técnico
 import LogsViewer from "./pages/LogsViewer";
+import MetricsDashboard from "./pages/MetricsDashboard";
 
 
 function AnimatedRoutes() {
