@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Activity, Server, Globe, Clock, AlertTriangle } from "lucide-react";
+import { Activity, Server, Globe, Clock } from "lucide-react";
 
 const REFRESH_INTERVAL = 10000; // 10s
 
@@ -14,16 +14,47 @@ export default function ServiceDashboard() {
       const data = await res.json();
       const services = data.services || [];
 
-      // Agrupa servicios backend/frontend por número de equipo
+      // ============================================================
+      // AGRUPADOR NUEVO — AHORA SÍ UNE BACKEND + FRONTEND POR EQUIPO
+      // ============================================================
       const grupos = {};
+
       services.forEach((s) => {
-        const match = s.name.match(/(PLN|ITM).*?(\d+)/);
-        if (match) {
-          const [_, tipo, num] = match;
-          const key = `${tipo}${num}`;
-          if (!grupos[key]) grupos[key] = { tipo, num, backend: null, frontend: null };
-          if (s.name.toLowerCase().includes("backend")) grupos[key].backend = s;
-          else grupos[key].frontend = s;
+        if (!s.url) return;
+
+        // Extraer puerto de la URL: http://10.5.20.50:9001/health
+        const portMatch = s.url.match(/:(\d+)\//);
+        if (!portMatch) return;
+
+        const port = parseInt(portMatch[1], 10);
+
+        // Determinar tipo PLN/ITM desde el nombre
+        let tipo = "OTRO";
+        if (s.name.startsWith("PLN")) tipo = "PLN";
+        else if (s.name.startsWith("ITM")) tipo = "ITM";
+
+        // Calcular número de equipo según el puerto
+        let num = null;
+
+        if (tipo === "PLN") {
+          if (port >= 9001 && port <= 9006) num = port - 9000;   // Backend PLN
+          if (port >= 9301 && port <= 9306) num = port - 9300;   // Frontend PLN
+        } else if (tipo === "ITM") {
+          if (port >= 9101 && port <= 9108) num = port - 9100;   // Backend ITM
+          if (port >= 9401 && port <= 9408) num = port - 9400;   // Frontend ITM
+        }
+
+        if (num === null) return;
+
+        const key = `${tipo}${num}`;
+        if (!grupos[key]) {
+          grupos[key] = { tipo, num, backend: null, frontend: null };
+        }
+
+        if (s.name.toLowerCase().includes("backend")) {
+          grupos[key].backend = s;
+        } else if (s.name.toLowerCase().includes("frontend")) {
+          grupos[key].frontend = s;
         }
       });
 
@@ -43,38 +74,58 @@ export default function ServiceDashboard() {
 
   // --- Estadísticas globales ---
   const stats = useMemo(() => {
-    let up = 0, down = 0, slow = 0, total = 0;
-    let plnLat = [], itmLat = [];
-    equipos.forEach(e => {
-      [e.backend, e.frontend].forEach(s => {
+    let up = 0,
+      down = 0,
+      slow = 0,
+      total = 0;
+    let plnLat = [],
+      itmLat = [];
+
+    equipos.forEach((e) => {
+      [e.backend, e.frontend].forEach((s) => {
         if (!s) return;
+
         total++;
+
         if (s.status === "UP") {
           up++;
           if (s.latency_ms && s.latency_ms > 800) slow++;
-        } else if (s.status === "DOWN") down++;
+        } else if (s.status === "DOWN") {
+          down++;
+        }
+
         if (e.tipo === "PLN" && s.latency_ms) plnLat.push(s.latency_ms);
         if (e.tipo === "ITM" && s.latency_ms) itmLat.push(s.latency_ms);
       });
     });
-    const avg = arr => arr.length ? (arr.reduce((a,b)=>a+b,0)/arr.length).toFixed(1) : "—";
+
+    const avg = (arr) =>
+      arr.length ? (arr.reduce((a, b) => a + b, 0) / arr.length).toFixed(1) : "—";
+
     return {
-      up, down, slow, total,
+      up,
+      down,
+      slow,
+      total,
       avgPLN: avg(plnLat),
-      avgITM: avg(itmLat)
+      avgITM: avg(itmLat),
     };
   }, [equipos]);
 
   const colorEstado = (status, latency) => {
-    if (status === "DOWN") return "bg-red-900/30 border-red-600 text-red-300";
-    if (latency && latency > 800) return "bg-yellow-900/30 border-yellow-600 text-yellow-300";
-    if (status === "UP") return "bg-green-900/30 border-green-600 text-green-300";
+    if (status === "DOWN")
+      return "bg-red-900/30 border-red-600 text-red-300";
+    if (latency && latency > 800)
+      return "bg-yellow-900/30 border-yellow-600 text-yellow-300";
+    if (status === "UP")
+      return "bg-green-900/30 border-green-600 text-green-300";
     return "bg-gray-800/50 border-gray-600 text-gray-400";
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-950 via-gray-900 to-black text-white p-6">
       <div className="max-w-7xl mx-auto space-y-8">
+        
         {/* ======= Header tipo NOC ======= */}
         <header className="bg-gray-900/80 border border-gray-700 rounded-xl p-4 flex flex-wrap justify-between items-center shadow-lg">
           <div className="flex items-center gap-2">
@@ -147,7 +198,7 @@ export default function ServiceDashboard() {
                 >
                   <div className="flex justify-between items-center mb-1">
                     <span className="font-semibold text-sm flex items-center gap-1">
-                      {s?.name?.includes("Backend") ? (
+                      {s?.name?.toLowerCase().includes("backend") ? (
                         <>
                           <Server size={14} /> Backend
                         </>
@@ -157,8 +208,11 @@ export default function ServiceDashboard() {
                         </>
                       )}
                     </span>
-                    <span className="text-xs font-bold">{s?.status || "—"}</span>
+                    <span className="text-xs font-bold">
+                      {s?.status || "—"}
+                    </span>
                   </div>
+
                   <p className="text-xs truncate">
                     {s?.url && (
                       <a
@@ -177,6 +231,7 @@ export default function ServiceDashboard() {
                       </a>
                     )}
                   </p>
+
                   <p className="text-xs truncate">
                     <a
                       href={s?.repo}
@@ -187,6 +242,7 @@ export default function ServiceDashboard() {
                       {s?.repo}
                     </a>
                   </p>
+
                   {s?.latency_ms && (
                     <p className="text-xs text-gray-400 mt-1">
                       Latencia: {s.latency_ms} ms
@@ -200,7 +256,8 @@ export default function ServiceDashboard() {
 
         {/* === Pie NOC === */}
         <footer className="text-center text-xs text-gray-600 mt-8">
-          NOC Portal Docente ISI 2025 • Actualización cada {REFRESH_INTERVAL / 1000}s
+          NOC Portal Docente ISI 2025 • Actualización cada{" "}
+          {REFRESH_INTERVAL / 1000}s
         </footer>
       </div>
     </div>
