@@ -4,7 +4,7 @@ import httpx
 import asyncio
 import time
 
-router = APIRouter(prefix="/monitor", tags=["Monitor"])
+router = APIRouter(prefix="/api/monitor", tags=["Monitor"])
 
 # 🔹 Servicios a monitorear (visibles desde la red externa 10.5.20.50)
 services = [
