@@ -1,5 +1,4 @@
 # app/backend/src/api/routes/monitor.py
-
 from fastapi import APIRouter, HTTPException
 import httpx
 import asyncio
@@ -8,15 +7,10 @@ import docker
 
 router = APIRouter(prefix="/api/monitor", tags=["Monitor"])
 
-# ============================================================
-# 🔥 CLIENTE DOCKER PARA LEER ESTADO REAL DEL CONTENEDOR
-# ============================================================
+# 🔹 Cliente Docker para leer estado real de contenedores
 docker_client = docker.DockerClient(base_url="unix://var/run/docker.sock")
 
-
-# ============================================================
-# 🔹 Servicios a monitorear (visibles desde la red externa)
-# ============================================================
+# 🔹 Servicios a monitorear (visibles desde la red externa 10.5.20.50)
 services = [
     # ==== EQUIPOS PLN ====
     {"name": "PLN Backend 9001", "status": None, "latency_ms": None,
@@ -34,37 +28,74 @@ services = [
     {"name": "PLN Frontend 9303", "status": None, "latency_ms": None,
      "url": "http://10.5.20.50:9303/health", "repo": "https://github.com/rromanc-coder/equipo3"},
 
+    {"name": "PLN Backend 9004", "status": None, "latency_ms": None,
+     "url": "http://10.5.20.50:9004/health", "repo": "https://github.com/rromanc-coder/equipo4"},
+    {"name": "PLN Frontend 9304", "status": None, "latency_ms": None,
+     "url": "http://10.5.20.50:9304/health", "repo": "https://github.com/rromanc-coder/equipo4"},
+
+    {"name": "PLN Backend 9005", "status": None, "latency_ms": None,
+     "url": "http://10.5.20.50:9005/health", "repo": "https://github.com/rromanc-coder/equipo5"},
+    {"name": "PLN Frontend 9305", "status": None, "latency_ms": None,
+     "url": "http://10.5.20.50:9305/health", "repo": "https://github.com/rromanc-coder/equipo5"},
+
+    {"name": "PLN Backend 9006", "status": None, "latency_ms": None,
+     "url": "http://10.5.20.50:9006/health", "repo": "https://github.com/rromanc-coder/equipo6"},
+    {"name": "PLN Frontend 9306", "status": None, "latency_ms": None,
+     "url": "http://10.5.20.50:9306/health", "repo": "https://github.com/rromanc-coder/equipo6"},
+
     # ==== EQUIPOS ITM ====
     {"name": "ITM Backend 9101", "status": None, "latency_ms": None,
-     "url": "http://10.5.20.50:9101/health", "repo": "https://github.com/rromanc-coder/itm1"},
+     "url": "http://10.5.20.50:9101/health", "repo": "https://github.com/rromanc-coder/REPO_ITM1"},
     {"name": "ITM Frontend 9401", "status": None, "latency_ms": None,
-     "url": "http://10.5.20.50:9401/health", "repo": "https://github.com/rromanc-coder/itm1"},
+     "url": "http://10.5.20.50:9401/health", "repo": "https://github.com/rromanc-coder/REPO_ITM1"},
 
     {"name": "ITM Backend 9102", "status": None, "latency_ms": None,
-     "url": "http://10.5.20.50:9102/health", "repo": "https://github.com/rromanc-coder/itm2"},
+     "url": "http://10.5.20.50:9102/health", "repo": "https://github.com/rromanc-coder/REPO_ITM2"},
     {"name": "ITM Frontend 9402", "status": None, "latency_ms": None,
-     "url": "http://10.5.20.50:9402/health", "repo": "https://github.com/rromanc-coder/itm2"},
+     "url": "http://10.5.20.50:9402/health", "repo": "https://github.com/rromanc-coder/REPO_ITM2"},
 
     {"name": "ITM Backend 9103", "status": None, "latency_ms": None,
-     "url": "http://10.5.20.50:9103/health", "repo": "https://github.com/rromanc-coder/itm3"},
+     "url": "http://10.5.20.50:9103/health", "repo": "https://github.com/rromanc-coder/REPO_ITM3"},
     {"name": "ITM Frontend 9403", "status": None, "latency_ms": None,
-     "url": "http://10.5.20.50:9403/health", "repo": "https://github.com/rromanc-coder/itm3"},
+     "url": "http://10.5.20.50:9403/health", "repo": "https://github.com/rromanc-coder/REPO_ITM3"},
+
+    {"name": "ITM Backend 9104", "status": None, "latency_ms": None,
+     "url": "http://10.5.20.50:9104/health", "repo": "https://github.com/rromanc-coder/REPO_ITM4"},
+    {"name": "ITM Frontend 9404", "status": None, "latency_ms": None,
+     "url": "http://10.5.20.50:9404/health", "repo": "https://github.com/rromanc-coder/REPO_ITM4"},
+
+    {"name": "ITM Backend 9105", "status": None, "latency_ms": None,
+     "url": "http://10.5.20.50:9105/health", "repo": "https://github.com/rromanc-coder/REPO_ITM5"},
+    {"name": "ITM Frontend 9405", "status": None, "latency_ms": None,
+     "url": "http://10.5.20.50:9405/health", "repo": "https://github.com/rromanc-coder/REPO_ITM5"},
+
+    {"name": "ITM Backend 9106", "status": None, "latency_ms": None,
+     "url": "http://10.5.20.50:9106/health", "repo": "https://github.com/rromanc-coder/REPO_ITM6"},
+    {"name": "ITM Frontend 9406", "status": None, "latency_ms": None,
+     "url": "http://10.5.20.50:9406/health", "repo": "https://github.com/rromanc-coder/REPO_ITM6"},
+
+    {"name": "ITM Backend 9107", "status": None, "latency_ms": None,
+     "url": "http://10.5.20.50:9107/health", "repo": "https://github.com/rromanc-coder/REPO_ITM7"},
+    {"name": "ITM Frontend 9407", "status": None, "latency_ms": None,
+     "url": "http://10.5.20.50:9407/health", "repo": "https://github.com/rromanc-coder/REPO_ITM7"},
+
+    {"name": "ITM Backend 9108", "status": None, "latency_ms": None,
+     "url": "http://10.5.20.50:9108/health", "repo": "https://github.com/rromanc-coder/REPO_ITM8"},
+    {"name": "ITM Frontend 9408", "status": None, "latency_ms": None,
+     "url": "http://10.5.20.50:9408/health", "repo": "https://github.com/rromanc-coder/REPO_ITM8"},
 ]
 
 
-# ============================================================
-# 🔥 PING A LOS SERVICIOS
-# ============================================================
 async def ping_service(service):
-    start = time.time()
-    try:
-        async with httpx.AsyncClient(timeout=3.0) as client:
-            resp = await client.get(service["url"])
-            latency = round((time.time() - start) * 1000, 1)
-            status = "UP" if resp.status_code == 200 else f"HTTP {resp.status_code}"
-            return {**service, "status": status, "latency_ms": latency}
-    except Exception:
-        return {**service, "status": "DOWN", "latency_ms": None}
+  start = time.time()
+  try:
+      async with httpx.AsyncClient(timeout=3.0) as client:
+          resp = await client.get(service["url"])
+          latency = round((time.time() - start) * 1000, 1)
+          status = "UP" if resp.status_code == 200 else f"HTTP {resp.status_code}"
+          return {**service, "status": status, "latency_ms": latency}
+  except Exception:
+      return {**service, "status": "DOWN", "latency_ms": None}
 
 
 @router.get("/status")
@@ -73,20 +104,25 @@ async def get_status():
     return {"services": results}
 
 
-# ============================================================
-# 🔥 NUEVO ENDPOINT: ESTADO REAL DEL CONTENEDOR
-# ============================================================
 @router.get("/container-state/{name}")
 def container_state(name: str):
+    """
+    Lee el estado real del contenedor Docker por nombre y regresa el StartedAt.
+    Ejemplos:
+      - equipo4_backend
+      - equipo4_frontend
+      - itm3_backend
+    """
     try:
         container = docker_client.containers.get(name)
         info = container.attrs
-
         return {
             "name": name,
-            "state": info["State"],
-            "started_at": info["State"]["StartedAt"]
+            "state": info.get("State", {}),
+            "started_at": info.get("State", {}).get("StartedAt"),
         }
-
     except Exception as e:
-        raise HTTPException(status_code=404, detail=f"Contenedor '{name}' no encontrado o inaccesible: {str(e)}")
+        raise HTTPException(
+            status_code=404,
+            detail=f"Contenedor '{name}' no encontrado o inaccesible: {str(e)}",
+        )
